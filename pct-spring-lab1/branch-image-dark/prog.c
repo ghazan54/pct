@@ -1,9 +1,10 @@
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <time.h>
 
-enum {W = 15360, H = 8640};
+enum { W = 15360,
+    H = 8640 };
 
 double wtime()
 {
@@ -12,7 +13,7 @@ double wtime()
     return ts.tv_sec + ts.tv_nsec * 1E-9;
 }
 
-int image_is_dark(uint8_t *img, int width, int height)
+int image_is_dark(uint8_t* img, int width, int height)
 {
     int count = 0;
     for (int i = 0; i < height; i++) {
@@ -25,14 +26,20 @@ int image_is_dark(uint8_t *img, int width, int height)
     return count < width * height / 2;
 }
 
-int image_is_dark_opt(uint8_t *img, int width, int height)
+int image_is_dark_opt(uint8_t* img, int width, int height)
 {
-    // TODO
+    int count = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            count += img[i * width + j] >> 7;
+        }
+    }
+    return count < width * height / 2;
 }
 
 int main()
 {
-    uint8_t *image = malloc(sizeof(*image) * W * H);
+    uint8_t* image = malloc(sizeof(*image) * W * H);
     srand(0);
     for (int i = 0; i < H; i++) {
         for (int j = 0; j < W; j++) {
@@ -42,7 +49,7 @@ int main()
 
     double t = wtime();
     int dark = image_is_dark(image, W, H);
-    //int dark = image_is_dark_opt(image, W, H);
+    // int dark = image_is_dark_opt(image, W, H);
     t = wtime() - t;
 
     printf("Time %.6f, dark %d\n", t, dark);
