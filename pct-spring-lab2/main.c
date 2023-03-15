@@ -92,11 +92,11 @@ int main(int argc, char** argv)
     printf("Matrix-vector product (c[m] = a[m, n] * b[n]; m = %d, n = %d)\n", m, n);
     printf("Memory used: %" PRIu64 " MiB\n", ((m * n + m + n) * sizeof(double)) >> 20);
 
-#if _RUN_SERIAL
+#ifdef _RUN_SERIAL
     run_serial();
 #endif
 
-#if _RUN_PARRALEL
+#ifdef _RUN_PARRALEL
     run_parallel();
 #endif
 
