@@ -12,7 +12,7 @@ struct particle {
 const float G = 6.67e-11;
 void calculate_forces(struct particle* p, struct particle* f, float* m, int n)
 {
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 6) nowait
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             if (i == j)

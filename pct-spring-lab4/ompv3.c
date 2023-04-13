@@ -13,7 +13,7 @@ const float G = 6.67e-11;
 omp_lock_t* locks; // Массив из N блокировок (мьютексов) — блокировка на уровне отдельных ячеек
 void calculate_forces(struct particle* p, struct particle* f, float* m, int n)
 {
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 6) nowait
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             float dist = sqrtf(powf(p[i].x - p[j].x, 2) + powf(p[i].y - p[j].y, 2) + powf(p[i].z - p[j].z, 2));

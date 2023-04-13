@@ -14,7 +14,7 @@ def draw(filenames, labels):
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.size'] = '12'
     plt.rcParams["legend.loc"] = "upper left" # 'upper left', 'upper right', 'lower left', 'lower right', 'center'
-    plt.rcParams["legend.fontsize"] = "6"
+    plt.rcParams["legend.fontsize"] = "5"
     
     cm = 1/2.54  # centimeters in inches
     fig = plt.figure(figsize=(10*cm, 7*cm))
@@ -66,5 +66,5 @@ def draw(filenames, labels):
     # fig.savefig('chart.pdf', dpi=300)
 
 if __name__ == "__main__":
-    # draw(["prog1.dat", "prog2.dat", "prog3.dat", "prog4.dat", "prog5.dat"], ["одна критическая секция", "6 атомарных операций", "n блокировок", "версия без блокировок с избыточными вычислениями", "версия без блокировок с локальным хранением вектора сил в каждом потоке"])
-    draw(["prog1.dat", "prog2.dat", "prog3.dat", "prog4.dat", "prog5.dat"], ["Версия 1", "Версия 2", "Версия 3", "Версия 4", "Версия 5"])
+    draw(["prog1.dat", "prog2.dat", "prog3.dat", "prog4.dat", "prog5.dat"], ["Одна критическая секция", "6 атомарных операций", "N блокировок", "Версия с избыточными вычислениями", "Версия с матрицей сил"])
+    # draw(["prog1.dat", "prog2.dat", "prog3.dat", "prog4.dat", "prog5.dat"], ["Версия 1", "Версия 2", "Версия 3", "Версия 4", "Версия 5"])

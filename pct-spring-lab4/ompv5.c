@@ -19,7 +19,7 @@ void calculate_forces(struct particle* p, struct particle* f[], float* m, int n)
         f[tid][i].y = 0;
         f[tid][i].z = 0;
     }
-#pragma omp for schedule(dynamic, 8)
+#pragma omp for schedule(dynamic, 1)
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
             float dist = sqrtf(powf(p[i].x - p[j].x, 2) + powf(p[i].y - p[j].y, 2) + powf(p[i].z - p[j].z, 2));
