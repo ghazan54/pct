@@ -13,7 +13,7 @@ void gen(int n)
         return;
     }
     while (n-- > 0) {
-        fprintf(f, "%d\n", rand() % 20);
+        fprintf(f, "%d\n", rand());
     }
     ++fn;
 }

@@ -1,4 +1,9 @@
+#include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <omp.h>
+#include <string>
+#include <vector>
 
 void partition(int* v, int& i, int& j, int low, int high)
 {
@@ -28,15 +33,32 @@ void quicksort(int* v, int low, int high)
         quicksort(v, i, high);
 }
 
-int main(void)
+void fill_array(std::vector<int>& v, char* filepath)
 {
-    int v[] = { 3, 2, 1, 0, 2, 5, 6, 7, 1, 2, 0 };
+    std::ifstream f(filepath);
+    int x;
+    while (f >> x)
+        v.push_back(x);
+}
 
-    quicksort(v, 0, sizeof(v) / sizeof(v[0]) - 1);
+int main(int argc, char** argv)
+{
+    if (argc < 2)
+        return 1;
 
-    for (const auto& i : v)
-        std::cout << i << ' ';
-    std::cout << '\n';
+    std::vector<int> v;
+    std::cout << "File: " << std::string(argv[1]) << '\n';
+    fill_array(v, argv[1]);
+
+    int* p = v.data();
+    int low = 0, high = static_cast<int>(v.size() - 1);
+    double t = omp_get_wtime();
+    quicksort(p, low, high);
+    t = omp_get_wtime() - t;
+    std::cout << "Time: " << std::fixed << std::setprecision(9) << t << '\n';
+    // for (const auto& i : v)
+    //     std::cout << i << ' ';
+    // std::cout << '\n';
 
     return 0;
 }
