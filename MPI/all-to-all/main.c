@@ -12,6 +12,21 @@ void* xmalloc(size_t size) {
     return ptr;
 }
 
+void all_to_all(char* sbuf, char* rbuf, int msg_size, int commsize,
+                MPI_Datatype datatype) {
+    MPI_Request requests[2 * commsize];
+    MPI_Status statuses[2 * commsize];
+
+    for (int i = 0; i < commsize; i++) {
+        MPI_Isend(sbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
+                  &requests[i]);
+        MPI_Irecv(rbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
+                  &requests[commsize + i]);
+    }
+
+    MPI_Waitall(2 * commsize, requests, statuses);
+}
+
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
 
@@ -19,29 +34,18 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &commsize);
 
-    int msg_size = 1024;
+    int msg_size = 3;
     MPI_Datatype datatype = MPI_CHAR;
 
-    char* sbuf = (char*)malloc(msg_size * commsize * sizeof(char));
-    char* rbuf = (char*)malloc(msg_size * commsize * sizeof(char));
+    char* sbuf = (char*)xmalloc(msg_size * commsize * sizeof(*sbuf));
+    char* rbuf = (char*)xmalloc(msg_size * commsize * sizeof(*rbuf));
 
     memset(sbuf, rank + 'a', msg_size * commsize);
-
-    MPI_Request send_request[commsize];
-    MPI_Request recv_request[commsize];
-    MPI_Status status[commsize];
+    memset(rbuf, 0, msg_size * commsize);
 
     double t = MPI_Wtime();
 
-    for (int i = 0; i < commsize; i++) {
-        MPI_Isend(sbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
-                  &send_request[i]);
-        MPI_Irecv(rbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
-                  &recv_request[i]);
-    }
-
-    MPI_Waitall(commsize, send_request, status);
-    MPI_Waitall(commsize, recv_request, status);
+    all_to_all(sbuf, rbuf, msg_size, commsize, datatype);
 
     t = MPI_Wtime() - t;
 
@@ -53,7 +57,7 @@ int main(int argc, char** argv) {
     }
 
     // printf("[%d] %s\n", rank, sbuf);
-    // printf("[%d] %s\n", rank, rbuf);
+    printf("[%d] %s\n", rank, rbuf);
 
     free(sbuf);
     free(rbuf);

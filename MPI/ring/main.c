@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
-// #define SIZE (1)
 
 void xtime_to_file(double t, int size) {
     char filename[MPI_MAX_PROCESSOR_NAME];
@@ -11,7 +10,7 @@ void xtime_to_file(double t, int size) {
 
     FILE* f = fopen(filename, "w");
     if (!f) {
-        fprintf(stderr, "File '%s' is not open.\n", filename);
+        fprintf(stderr, "Файл '%s' не удалось открыть.\n", filename);
     }
     fprintf(f, "%f\n", t);
     fclose(f);
@@ -30,50 +29,47 @@ void init_msg(char* msg, size_t size) {
 }
 
 int main(int argc, char** argv) {
-    int commsize, rank, len;
+    int commsize, rank;
 
-    int tag1 = 0, tag2 = 1;
+    int tag = 0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &commsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     int sizes[] = {1, 1024, 1024 * 1024};
+    // int sizes[] = {1};
     for (int i = 0; i < NELEMS(sizes); ++i) {
         int size = sizes[i];
-        // char inbuf_prev[size], inbuf_next[size], outbuf_prev[size],
-        //     outbuf_next[size];
 
-        char* inbuf_prev = (char*)xmalloc(size);
-        char* inbuf_next = (char*)xmalloc(size);
-        char* outbuf_prev = (char*)xmalloc(size);
-        char* outbuf_next = (char*)xmalloc(size);
+        char* inbuf = (char*)xmalloc(size);
+        char* outbuf = (char*)xmalloc(size);
 
-        MPI_Request reqs[4];
-        MPI_Status stats[4];
+        MPI_Request reqs[2];
+        MPI_Status stats[2];
         int prev = (rank + commsize - 1) % commsize;
         int next = (rank + 1) % commsize;
 
-        init_msg(outbuf_prev, size);
-        init_msg(outbuf_next, size);
+        init_msg(outbuf, size);
 
         double t = MPI_Wtime();
 
-        MPI_Isend(outbuf_prev, size, MPI_CHAR, prev, tag1, MPI_COMM_WORLD,
-                  &reqs[0]);
-        MPI_Isend(outbuf_next, size, MPI_CHAR, next, tag2, MPI_COMM_WORLD,
-                  &reqs[1]);
-        MPI_Irecv(inbuf_prev, size, MPI_CHAR, prev, tag2, MPI_COMM_WORLD,
-                  &reqs[2]);
-        MPI_Irecv(inbuf_next, size, MPI_CHAR, next, tag1, MPI_COMM_WORLD,
-                  &reqs[3]);
-        MPI_Waitall(4, reqs, stats);
+        for (int step = 0; step < commsize - 1; ++step) {
+            // printf("P%d, N%d\n", prev, next);
+            MPI_Isend(outbuf, size, MPI_CHAR, next, tag, MPI_COMM_WORLD,
+                      &reqs[0]);
+            MPI_Irecv(inbuf, size, MPI_CHAR, prev, tag, MPI_COMM_WORLD,
+                      &reqs[1]);
+            MPI_Waitall(2, reqs, stats);
+
+            char* temp = outbuf;
+            outbuf = inbuf;
+            inbuf = temp;
+        }
 
         t = MPI_Wtime() - t;
-        // printf("Time = %lf\n", t);
 
         double total_t;
-
         MPI_Reduce(&t, &total_t, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
         if (rank == 0) {
@@ -81,10 +77,8 @@ int main(int argc, char** argv) {
             xtime_to_file(total_t, size);
         }
 
-        free(inbuf_prev);
-        free(inbuf_next);
-        free(outbuf_prev);
-        free(outbuf_next);
+        free(inbuf);
+        free(outbuf);
     }
 
     MPI_Finalize();
