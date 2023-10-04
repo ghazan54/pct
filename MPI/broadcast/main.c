@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ELEMS (1024)
+#define ELEMS (0)
 
 void bcast(char* buf, int root, int world_size, int world_rank) {
     if (world_rank == root) {
@@ -27,8 +27,10 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     int root = 0;
-    char* buf = (char*)malloc(sizeof(*buf) * ELEMS);
-    strcpy(buf, "test msg");
+    // char* buf = (char*)malloc(sizeof(*buf) * ELEMS);
+    // strcpy(buf, "test msg");
+    char buf;
+    // strcpy(buf, "");
 
     double t = MPI_Wtime();
     bcast(buf, root, world_size, world_rank);

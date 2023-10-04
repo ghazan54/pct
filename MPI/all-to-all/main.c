@@ -12,12 +12,14 @@ void* xmalloc(size_t size) {
     return ptr;
 }
 
-void all_to_all(char* sbuf, char* rbuf, int msg_size, int commsize,
+void all_to_all(char* sbuf, char* rbuf, int msg_size, int rank, int commsize,
                 MPI_Datatype datatype) {
     MPI_Request requests[2 * commsize];
     MPI_Status statuses[2 * commsize];
 
     for (int i = 0; i < commsize; i++) {
+        int send_rank = (rank - i - 1 + commsize) % commsize;
+        int recv_rank = (rank + i + 1) % commsize;
         MPI_Isend(sbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
                   &requests[i]);
         MPI_Irecv(rbuf + i * msg_size, msg_size, datatype, i, 0, MPI_COMM_WORLD,
@@ -34,7 +36,7 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &commsize);
 
-    int msg_size = 3;
+    int msg_size = 1;
     MPI_Datatype datatype = MPI_CHAR;
 
     char* sbuf = (char*)xmalloc(msg_size * commsize * sizeof(*sbuf));
@@ -45,7 +47,7 @@ int main(int argc, char** argv) {
 
     double t = MPI_Wtime();
 
-    all_to_all(sbuf, rbuf, msg_size, commsize, datatype);
+    all_to_all(sbuf, rbuf, msg_size, rank, commsize, datatype);
 
     t = MPI_Wtime() - t;
 
