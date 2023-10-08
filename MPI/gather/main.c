@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ELEMS (1)
+#define ELEMS (15)
 
 void gather(char* sbuf, char* rbuf, int root, int world_size, int world_rank) {
     if (world_rank == root) {
@@ -28,24 +28,18 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     int root = 0;
-    char* sbuf = (char*)malloc(sizeof(*sbuf) * ELEMS);
+    char* sbuf = (char*)calloc(ELEMS, sizeof(*sbuf));
     char* rbuf = NULL;
 
     if (world_rank == root) {
-        rbuf = (char*)malloc(sizeof(*rbuf) * ELEMS * world_size);
+        rbuf = (char*)calloc(ELEMS, sizeof(*rbuf) * world_size + 1);
     }
 
     memset(sbuf, 'a' + world_rank, ELEMS * sizeof(*sbuf));
 
-    double t = MPI_Wtime();
     gather(sbuf, rbuf, root, world_size, world_rank);
-    t = MPI_Wtime() - t;
-
-    double total_t;
-    MPI_Reduce(&t, &total_t, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
 
     if (world_rank == root) {
-        printf("Time = %f\n", total_t);
         printf("[%d] %s\n", world_rank, rbuf);
     }
 
