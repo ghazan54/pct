@@ -38,28 +38,28 @@ void sgemv(float *a, float *b, float *c, int m, int n) {
         c[lb + i] = 0.0;
         for (int j = 0; j < n; j++) c[lb + i] += a[i * n + j] * b[j];
     }
-    // Gather data: each process contains sub-result in c[m] in rows [lb..ub]
-    if (rank == 0) {
-        int *displs = malloc(sizeof(*displs) * commsize);
-        int *rcounts = malloc(sizeof(*rcounts) * commsize);
-        for (int i = 0; i < commsize; i++) {
-            int l, u;
-            get_chunk(0, m - 1, commsize, i, &l, &u);
-            rcounts[i] = u - l + 1;
-            displs[i] = (i > 0) ? displs[i - 1] + rcounts[i - 1] : 0;
-        }
-        MPI_Gatherv(MPI_IN_PLACE, ub - lb + 1, MPI_FLOAT, c, rcounts, displs,
-                    MPI_FLOAT, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Gatherv(&c[lb], ub - lb + 1, MPI_FLOAT, NULL, NULL, NULL, MPI_FLOAT,
-                    0, MPI_COMM_WORLD);
+
+    // Gather data from all processes using Allgatherv
+    int *displs = malloc(sizeof(*displs) * commsize);
+    int *rcounts = malloc(sizeof(*rcounts) * commsize);
+    for (int i = 0; i < commsize; i++) {
+        int l, u;
+        get_chunk(0, m - 1, commsize, i, &l, &u);
+        rcounts[i] = u - l + 1;
+        displs[i] = (i > 0) ? displs[i - 1] + rcounts[i - 1] : 0;
     }
+
+    MPI_Allgatherv(&c[lb], ub - lb + 1, MPI_FLOAT, c, rcounts, displs,
+                   MPI_FLOAT, MPI_COMM_WORLD);
+
+    free(displs);
+    free(rcounts);
 }
 
 int main(int argc, char **argv) {
     int commsize, rank;
     int n, m;
-    n = m = 323;
+    n = m = 400;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &commsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -80,15 +80,15 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         // Validation
-        // for (int i = 0; i < m; i++) {
-        //     float r = (i + 1) * (n / 2.0 + pow(n, 2) / 2.0);
-        //     if (fabs(c[i] - r) > 1E-6) {
-        //         fprintf(stderr,
-        //                 "Validation failed: elem %d = %f (real value %f)\n",
-        //                 i, c[i], r);
-        //         break;
-        //     }
-        // }
+        for (int i = 0; i < m; i++) {
+            float r = (i + 1) * (n / 2.0 + pow(n, 2) / 2.0);
+            if (fabs(c[i] - r) > 1E-6) {
+                fprintf(stderr,
+                        "Validation failed: elem %d = %f (real value %f)\n", i,
+                        c[i], r);
+                break;
+            }
+        }
         printf(
             "DGEMV: matrix-vector product (c[m] = a[m, n] * b[n]; m = %d, n = "
             "%d)\n",
