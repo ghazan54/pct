@@ -44,6 +44,10 @@ def draw(filenames, labels):
     thrd_end = max(dataX[0])
     wdh = 3.4 / (count_versions + 1)
 
+    plt.figtext(0.314, 0.19, "(1x8)", ha='center', va='center', fontsize=7)
+    plt.figtext(0.619, 0.19, "(2x8)", ha='center', va='center', fontsize=7)
+    plt.figtext(0.914, 0.19, "(3x8)", ha='center', va='center', fontsize=7)
+
     first_iteration = True
     p_offset = -wdh * count_versions * 0.5
     while thrd_cur <= thrd_end:
@@ -61,6 +65,9 @@ def draw(filenames, labels):
     for i in range(0, len(dataX)):
         ax.bar(dataX[i] + p_offset, dataY[i], label=lbls[i], width=wdh)
         p_offset += wdh
+        for j in range (len(dataX[i])):
+            ax.annotate(str(dataY[i][j]), xy=(dataX[i][j] + p_offset - 0.4, dataY[i][j]), ha='right', va='bottom', fontsize=7)
+            # ax.text(dataX[i][j] + p_offset, dataY[i][j]-5, '(1x8)', fontsize=8, ha='left', va='bottom')
 
     plt.tight_layout()
     ax.legend()
@@ -70,5 +77,5 @@ def draw(filenames, labels):
 
 if __name__ == "__main__":
     draw(["node1.dat", "node2.dat"], [
-         "28 000 элементов", "45 000 элементов"])
+         "N = 28 000", "N = 45 000"])
     # draw(["prog1.dat", "prog2.dat", "prog3.dat", "prog4.dat", "prog5.dat"], ["Версия 1", "Версия 2", "Версия 3", "Версия 4", "Версия 5"])
